@@ -7,7 +7,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^3.8.1"
+  },
   "dependencies": {
     "body-parser": "^1.15.2",
     "cors": "^2.8.1",
@@ -16,8 +18,14 @@
     "foreman": "^2.0.0",
     "morgan": "^1.7.0",
     "mysql": "^2.11.1",
+    "nodemon": "^1.11.0",
     "sequelize": "^3.24.3",
     "sequelize-cli": "^2.4.0"
   },
-  "scripts": {}
+  "scripts": {
+    "pretest": "eslint */*.js",
+    "test": "mocha --require ignore-styles --recursive --compilers js:babel-register --reporter spec server/test",
+    "nodemon": "nodemon ./index",
+    "start": "node ./index"
+  }
 }

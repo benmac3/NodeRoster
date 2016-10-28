@@ -1,3 +1,3 @@
-var model = require('./models');
+var model = require('../app/models');
 console.log(model.sequelize);
 console.log(model.skill);

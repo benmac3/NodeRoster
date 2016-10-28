@@ -14,8 +14,10 @@ To seed the database with data, use:
 
 ./node_modules/.bin/sequelize db:seed --seed ./seeders/20161002045650-example.js
 
-Finally, to start node, execute:
+Finally, to start node with nodemon to pick up changes, execute:
 
-node src/server
+npm run nodemon
 
 Node should be up and listening on port 9001
+
+The structure of the application follows - http://www.codekitchen.ca/guide-to-structuring-and-building-a-restful-api-using-express-4/

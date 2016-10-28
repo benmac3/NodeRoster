@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 module.exports = function(sequelize, DataTypes) {
   var Shift = sequelize.define('shift', {
@@ -15,7 +15,7 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       associate: function(models) {
         // This feels a little odd but it does create the correct behavior of adding the FK to the Shift table rather than the Skill table
-        Shift.belongsTo(models.skill)
+        Shift.belongsTo(models.skill);
       }
     }
   });
