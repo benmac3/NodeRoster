@@ -21,3 +21,5 @@ npm run nodemon
 Node should be up and listening on port 9001
 
 The structure of the application follows - http://www.codekitchen.ca/guide-to-structuring-and-building-a-restful-api-using-express-4/
+
+The module strategy was informed by - http://bites.goodeggs.com/posts/export-this/

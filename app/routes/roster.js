@@ -1,8 +1,9 @@
-module.exports = (function() {
+var logger = require('winston');
+
+module.exports = function(router,models) {
   'use strict';
-  var router = require('express').Router();
-  router.get('/roster',function(req, res) {
-    var models = require('../models');
+  logger.info('Adding roster');
+  router.get('/',function(req, res) {
     var shift = models.shift;
     var worker = models.worker;
     var workerSkill = models.workerSkill;
@@ -16,4 +17,4 @@ module.exports = (function() {
     });
   });
   return router;
-})();
+};
