@@ -4,49 +4,62 @@ var http = require('http');
 
 module.exports = function(router,models) {
   'use strict';
-  router.get('/',function(req, res) {
-    var shift = models.shift;
-    var worker = models.worker;
-    var workerSkill = models.workerSkill;
-    shift.findAll()
-    .then(function(result) {
-      var shifts = result.map(mapShifts);
-      worker.findAll({include: [{model: workerSkill}]})
-      .then(function(result) {
-        //res.json({'shifts':shifts,'workers':result.map(mapWorkers)});
-        var post_data = JSON.stringify({'shifts':shifts,'workers':result.map(mapWorkers),'fixedShiftWorkers':[]});
-        console.log(post_data);
-        var post_options = {
-          host: 'www.rosterengine.net',
-          port: '80',
-          path: '/WebRoster/roster',
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        };
-        var post_req = http.request(post_options, function(resp) {
-          var body = '';
-          resp.setEncoding('utf8');
-          resp.on('data', function (chunk) {
-            //console.log('Response: ' + chunk);
-            body += chunk;
-          });
-          resp.on('end', function() {
-            res.json(JSON.parse(body));
-          });
-        });
 
-        post_req.write(post_data);
-        post_req.end();
-
-      });
+  // return the JSON request being sent to the roster engine...
+  router.get('/request', function(req, res) {
+    createRoster(models, function(result) {
+      res.json(result);
     });
   });
+
+  // retrieve the Roster solution based on the JSON request...
+  router.get('/solution', function(req, res) {
+    createRoster(models, function(result) {
+        //res.json({'shifts':shifts,'workers':result.map(mapWorkers)});
+      var post_data = JSON.stringify(result);
+
+      var post_options = {
+        host: 'localhost',
+        port: '8080',
+        path: '/WebRoster/roster',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+
+      var post_req = http.request(post_options, function(resp) {
+        var body = '';
+        resp.setEncoding('utf8');
+        resp.on('data', function (chunk) {
+          //console.log('Response: ' + chunk);
+          body += chunk;
+        });
+        resp.on('end', function() {
+          res.json(JSON.parse(body));
+        });
+      });
+      post_req.write(post_data);
+      post_req.end();
+    });
+  });
+
   return router;
 };
 
-
+function createRoster(models,callback) {
+  var shift = models.shift;
+  var worker = models.worker;
+  var workerSkill = models.workerSkill;
+  shift.findAll()
+  .then(function(result) {
+    var shifts = result.map(mapShifts);
+    worker.findAll({include: [{model: workerSkill}]})
+    .then(function(result) {
+      callback({'shifts':shifts,'workers':result.map(mapWorkers),'fixedShiftWorkers':[]});
+    });
+  });
+}
 
 function mapShifts(shift) {
   return {
