@@ -2,6 +2,7 @@
 
 var express = require('express');
 var path = require('path');
+var cors = require('cors');
 // Local dependecies
 
 // create the express app
@@ -14,7 +15,7 @@ var start = function() {
   'use strict';
   // Configure express
   app = express();
-
+  app.use(cors());
   app.use(morgan('common'));
   app.use(bodyParser.urlencoded({extended: true}));
   app.use(bodyParser.json({type: '*/*'}));
