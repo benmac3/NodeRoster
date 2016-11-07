@@ -14,9 +14,9 @@ module.exports = function(router,models) {
 
   // retrieve the Roster solution based on the JSON request...
   router.get('/solution', function(req, res) {
-    createRoster(models, function(result) {
+    createRoster(models, function(engine_request) {
         //res.json({'shifts':shifts,'workers':result.map(mapWorkers)});
-      var post_data = JSON.stringify(result);
+      var post_data = JSON.stringify(engine_request);
 
       var post_options = {
         host: 'localhost',
@@ -36,7 +36,26 @@ module.exports = function(router,models) {
           body += chunk;
         });
         resp.on('end', function() {
-          res.json(JSON.parse(body));
+          //  take the result which has IDs for the shift and worker objects and replace them with
+          //  full objects.  There is some duplication of objects but the response has sufficient
+          //  information to serve the GUI without the need for multiple requests which ould result
+          //  in a dirty records being included
+          var arrayToHash = function (a,b) { a[b.id]=b; return a; };
+          var shiftMap = engine_request.shifts.reduce(arrayToHash ,{});
+          var workerMap = engine_request.workers.reduce(arrayToHash ,{});
+          var serverResp = JSON.parse(body);
+          var hydrate = function(a,b) {
+            a.push({
+              shift: shiftMap[b.shiftId],
+              worker: workerMap[b.workerId]
+            });
+            return a;
+          };
+          var firstRosterHydrated = serverResp.firstRosterSolution.reduce(hydrate ,[]);
+          var minCostRosterHydrated = serverResp.minCostRosterSolution.reduce(hydrate ,[]);
+          serverResp.firstRosterSolution = firstRosterHydrated;
+          serverResp.minCostRosterSolution = minCostRosterHydrated;
+          res.json(serverResp);
         });
       });
       post_req.write(post_data);
