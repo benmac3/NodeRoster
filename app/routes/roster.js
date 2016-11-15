@@ -44,17 +44,34 @@ module.exports = function(router,models) {
           var shiftMap = engine_request.shifts.reduce(arrayToHash ,{});
           var workerMap = engine_request.workers.reduce(arrayToHash ,{});
           var serverResp = JSON.parse(body);
-          var hydrate = function(a,b) {
-            a.push({
-              shift: shiftMap[b.shiftId],
-              worker: workerMap[b.workerId]
-            });
+          var aggregateWorkers = function(a,b) {
+            // if there is a record for the shift, append the record.
+            if (a[b.shiftId]) {
+              a[b.shiftId].push(b.workerId);
+            // otherwise create the new record
+            } else {
+              a[b.shiftId]=[b.workerId];
+            }
             return a;
           };
-          var firstRosterHydrated = serverResp.firstRosterSolution.reduce(hydrate ,[]);
-          var minCostRosterHydrated = serverResp.minCostRosterSolution.reduce(hydrate ,[]);
-          serverResp.firstRosterSolution = firstRosterHydrated;
-          serverResp.minCostRosterSolution = minCostRosterHydrated;
+
+          var hydrate = function(roster) {
+            var hydratedRoster = [];
+            for (var key in roster) {
+              var shift = shiftMap[key];
+              var workerIds = roster[key];
+              var workers = [];
+              for (var i = 0 ; i<workerIds.length ; i++) workers.push(workerMap[workerIds[i]]);
+              shift['workers']=workers;
+              hydratedRoster.push(shift);
+            }
+            return hydratedRoster;
+          };
+          var firstRoster = hydrate(serverResp.firstRosterSolution.reduce(aggregateWorkers, {}));
+          var minCostRoster = hydrate(serverResp.minCostRosterSolution.reduce(aggregateWorkers, {}));
+          serverResp.firstRosterSolution = {shifts: firstRoster};
+          serverResp.minCostRosterSolution = {shifts: minCostRoster};
+          //setTimeout((function() {res.json(serverResp);}), 2000);
           res.json(serverResp);
         });
       });
