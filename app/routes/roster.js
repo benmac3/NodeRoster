@@ -12,71 +12,62 @@ module.exports = function(router,models) {
     });
   });
 
-  // retrieve the Roster solution based on the JSON request...
+
+  // straight proxy of the response from the engine...
   router.get('/solution', function(req, res) {
     createRoster(models, function(engine_request) {
-        //res.json({'shifts':shifts,'workers':result.map(mapWorkers)});
-      var post_data = JSON.stringify(engine_request);
-
-      var post_options = {
-        host: 'localhost',
-        port: '8080',
-        path: '/WebRoster/roster',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      };
-
-      var post_req = http.request(post_options, function(resp) {
-        var body = '';
-        resp.setEncoding('utf8');
-        resp.on('data', function (chunk) {
-          //console.log('Response: ' + chunk);
-          body += chunk;
-        });
-        resp.on('end', function() {
-          //  take the result which has IDs for the shift and worker objects and replace them with
-          //  full objects.  There is some duplication of objects but the response has sufficient
-          //  information to serve the GUI without the need for multiple requests which ould result
-          //  in a dirty records being included
-          var arrayToHash = function (a,b) { a[b.id]=b; return a; };
-          var shiftMap = engine_request.shifts.reduce(arrayToHash ,{});
-          var workerMap = engine_request.workers.reduce(arrayToHash ,{});
-          var serverResp = JSON.parse(body);
-          var aggregateWorkers = function(a,b) {
-            // if there is a record for the shift, append the record.
-            if (a[b.shiftId]) {
-              a[b.shiftId].push(b.workerId);
-            // otherwise create the new record
-            } else {
-              a[b.shiftId]=[b.workerId];
-            }
-            return a;
-          };
-
-          var hydrate = function(roster) {
-            var hydratedRoster = [];
-            for (var key in roster) {
-              var shift = shiftMap[key];
-              var workerIds = roster[key];
-              var workers = [];
-              for (var i = 0 ; i<workerIds.length ; i++) workers.push(workerMap[workerIds[i]]);
-              shift['workers']=workers;
-              hydratedRoster.push(shift);
-            }
-            return hydratedRoster;
-          };
-          var firstRoster = hydrate(serverResp.firstRosterSolution.reduce(aggregateWorkers, {}));
-          var minCostRoster = hydrate(serverResp.minCostRosterSolution.reduce(aggregateWorkers, {}));
-          serverResp.firstRosterSolution = {shifts: firstRoster};
-          serverResp.minCostRosterSolution = {shifts: minCostRoster};
-          //setTimeout((function() {res.json(serverResp);}), 2000);
-          res.json(serverResp);
-        });
+      createPost(engine_request, function(body) {
+        res.json(JSON.parse(body));
       });
-      post_req.write(post_data);
-      post_req.end();
+    });
+  });
+
+
+
+
+
+  // retrieve the Roster solution based on the JSON request...
+  router.get('/clientSolution', function(req, res) {
+    createRoster(models, function(engine_request) {
+      createPost(engine_request, function(body) {
+        //  take the result which has IDs for the shift and worker objects and replace them with
+        //  full objects.  There is some duplication of objects but the response has sufficient
+        //  information to serve the GUI without the need for multiple requests which ould result
+        //  in a dirty records being included
+        var arrayToHash = function (a,b) { a[b.id]=b; return a; };
+        var shiftMap = engine_request.shifts.reduce(arrayToHash ,{});
+        var workerMap = engine_request.workers.reduce(arrayToHash ,{});
+        var serverResp = JSON.parse(body);
+        var aggregateWorkers = function(a,b) {
+          // if there is a record for the shift, append the record.
+          if (a[b.shiftId]) {
+            a[b.shiftId].push(b.workerId);
+          // otherwise create the new record
+          } else {
+            a[b.shiftId]=[b.workerId];
+          }
+          return a;
+        };
+
+        var hydrate = function(roster) {
+          var hydratedRoster = [];
+          for (var key in roster) {
+            var shift = shiftMap[key];
+            var workerIds = roster[key];
+            var workers = [];
+            for (var i = 0 ; i<workerIds.length ; i++) workers.push(workerMap[workerIds[i]]);
+            shift['workers']=workers;
+            hydratedRoster.push(shift);
+          }
+          return hydratedRoster;
+        };
+        var firstRoster = hydrate(serverResp.firstRosterSolution.reduce(aggregateWorkers, {}));
+        var minCostRoster = hydrate(serverResp.minCostRosterSolution.reduce(aggregateWorkers, {}));
+        serverResp.firstRosterSolution = {shifts: firstRoster};
+        serverResp.minCostRosterSolution = {shifts: minCostRoster};
+        //setTimeout((function() {res.json(serverResp);}), 2000);
+        res.json(serverResp);
+      });
     });
   });
 
@@ -136,4 +127,32 @@ function mapWorkerSkills(ws) {
     minShiftsOfCategory: ws.minShifts,
     maxShiftsOfCategory: ws.maxShifts
   };
+}
+
+function createPost(request, callback) {
+  var post_data = JSON.stringify(request);
+
+  var post_options = {
+    host: 'localhost',
+    port: '8080',
+    path: '/WebRoster/roster',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  var post_req = http.request(post_options, function(resp) {
+    var body = '';
+    resp.setEncoding('utf8');
+    resp.on('data', function (chunk) {
+      //console.log('Response: ' + chunk);
+      body += chunk;
+    });
+    resp.on('end', function() {
+      callback(body);
+    });
+  });
+  post_req.write(post_data);
+  post_req.end();
 }
