@@ -61,10 +61,12 @@ module.exports = function(router,models) {
           }
           return hydratedRoster;
         };
-        var firstRoster = hydrate(serverResp.firstRosterSolution.reduce(aggregateWorkers, {}));
-        var minCostRoster = hydrate(serverResp.minCostRosterSolution.reduce(aggregateWorkers, {}));
-        serverResp.firstRosterSolution = {shifts: firstRoster};
-        serverResp.minCostRosterSolution = {shifts: minCostRoster};
+        if (serverResp.numberOfSolutions>0) {
+          var firstRoster = hydrate(serverResp.firstRosterSolution.reduce(aggregateWorkers, {}));
+          var minCostRoster = hydrate(serverResp.minCostRosterSolution.reduce(aggregateWorkers, {}));
+          serverResp.firstRosterSolution = {shifts: firstRoster};
+          serverResp.minCostRosterSolution = {shifts: minCostRoster};
+        }
         //setTimeout((function() {res.json(serverResp);}), 2000);
         res.json(serverResp);
       });
