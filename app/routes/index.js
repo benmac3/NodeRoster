@@ -23,9 +23,17 @@ module.exports = function(app, models) {
   epilogue.resource({
     model: models.worker,
     associations: true,
-    endpoints: ['/workers', '/workers/:id', '/workers/:id/skills', '/workers/:id/workerTimeoff']
+    endpoints: ['/workers', '/workers/:id', '/workers/:id/workerSkills','/workers/:id/workerTimeoff'],
+    exclude: [{
+      model: models.skill
+    }]
   });
 
+  epilogue.resource({
+    model: models.workerSkill,
+    associations: true,
+    endpoints: ['/workerSkills', '/workerSkills/:id']
+  });
 
   // Initialize all routes
   Object.keys(routes).forEach(function(routeName) {
