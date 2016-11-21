@@ -1,0 +1,42 @@
+version: '2'
+
+services:
+
+  db:
+    image: benmac/mysql:latest
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: ${MYSQL_RANDOM_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3306:3306"
+
+  node:
+    depends_on:
+     - db
+     - engine
+    image: benmac/node-web-app:latest
+    ports:
+     - "9001:9001"
+    restart: always
+    environment:
+      ROSTER_DB_NAME: ${MYSQL_DATABASE}
+      ROSTER_DB_HOST: db
+      ROSTER_DB_USER: ${MYSQL_USER}
+      ROSTER_DB_PASSWORD: ${MYSQL_PASSWORD}
+      ROSTER_ENGINE_HOST: engine
+      ROSTER_ENGINE_PORT: 8080
+      NODE_ENV: 'docker'
+
+  engine:
+    image: benmac/tomcat:latest
+    ports:
+     - "8080:8080"
+    restart: always
+
+volumes:
+    db_data:

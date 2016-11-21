@@ -7,4 +7,7 @@ var models = require('../app/models/index')(sequelize);
 sequelize.drop().then(function() {
   console.log('Completed successfully');
   process.exit();
+}).catch(function (err) {
+  // Rolled back
+  console.error(err);
 });

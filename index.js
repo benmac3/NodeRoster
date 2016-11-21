@@ -14,6 +14,9 @@ var app = require('./config/initializers/server')();
 require('./config/initializers/restResources')(sequelize, app);
 require('./app/routes/index')(app, models);
 
+logger.info('Dumping environment variables');
+logger.info(process.env);
+
 var port = process.env.PORT || 9001;
 app.listen(port, function() {
   logger.info('Server listening at %s', port);

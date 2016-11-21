@@ -1,4 +1,6 @@
 
+var env       = process.env.NODE_ENV || 'development';
+var config    = require(__dirname + '/../../config/config.js')[env]['generator_service'];
 var logger = require('winston');
 var http = require('http');
 
@@ -135,8 +137,8 @@ function createPost(request, callback) {
   var post_data = JSON.stringify(request);
 
   var post_options = {
-    host: 'localhost',
-    port: '8080',
+    host: config['host'],
+    port: config['port'],
     path: '/WebRoster/roster',
     method: 'POST',
     headers: {
