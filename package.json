@@ -24,12 +24,15 @@
     "require-dir": "^0.3.1",
     "sequelize": "^3.24.3",
     "sequelize-cli": "^2.4.0",
+    "pm2": "^2.2.3",
     "winston": "^2.2.0"
   },
   "scripts": {
     "pretest": "eslint */*.js",
     "test": "mocha --require ignore-styles --recursive --compilers js:babel-register --reporter spec server/test",
     "nodemon": "nodemon ./index",
+    "daemon-start": "./node_modules/.bin/pm2 start index.js",
+    "daemon-stopall": "./node_modules/.bin/pm2 stop all",
     "start": "node ./index"
   }
 }
